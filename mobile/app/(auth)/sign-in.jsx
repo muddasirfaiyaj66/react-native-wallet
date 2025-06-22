@@ -1,7 +1,11 @@
 import { useSignIn } from '@clerk/clerk-expo'
 import { Link, useRouter } from 'expo-router'
-import { Text, TextInput, TouchableOpacity, View } from 'react-native'
+import { Text, TextInput, TouchableOpacity, View, Image } from 'react-native'
 import React from 'react'
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view'
+import { styles } from "@/assets/styles/auth.styles"
+import { Ionicons } from '@expo/vector-icons'
+import { COLORS } from '../../constants/colors'
 
 export default function Page() {
   const { signIn, setActive, isLoaded } = useSignIn()
@@ -9,6 +13,8 @@ export default function Page() {
 
   const [emailAddress, setEmailAddress] = React.useState('')
   const [password, setPassword] = React.useState('')
+  const [code, setCode] = React.useState('')
+  const [error, setError] = React.useState("")
 
   // Handle the submission of the sign-in form
   const onSignInPress = async () => {
@@ -32,35 +38,67 @@ export default function Page() {
         console.error(JSON.stringify(signInAttempt, null, 2))
       }
     } catch (err) {
-      // See https://clerk.com/docs/custom-flows/error-handling
-      // for more info on error handling
-      console.error(JSON.stringify(err, null, 2))
+
+      if (err.errors?.[0]?.code === "form_password_incorrect") {
+        setError("Password is incorrect. Please try again.")
+      }
+      setError("An error occurred. Please try again.")
     }
   }
 
   return (
-    <View>
-      <Text>Sign in</Text>
-      <TextInput
-        autoCapitalize="none"
-        value={emailAddress}
-        placeholder="Enter email"
-        onChangeText={(emailAddress) => setEmailAddress(emailAddress)}
-      />
-      <TextInput
-        value={password}
-        placeholder="Enter password"
-        secureTextEntry={true}
-        onChangeText={(password) => setPassword(password)}
-      />
-      <TouchableOpacity onPress={onSignInPress}>
-        <Text>Continue</Text>
-      </TouchableOpacity>
-      <View style={{ display: 'flex', flexDirection: 'row', gap: 3 }}>
-        <Link href="/sign-up">
-          <Text>Sign up</Text>
-        </Link>
+    <KeyboardAwareScrollView style={{ flex: 1 }}
+      contentContainerStyle={{ flexGrow: 1 }}
+      enableOnAndroid={true}
+      enableAutomaticScroll={true}
+      extraScrollHeight={100}
+    >
+      <View styles={styles.container} style={{ padding: 10 }}>
+
+        <Image source={require("../../assets/images/signUp.png")} style={styles.illustration} />
+        <Text style={styles.title}>Welcome Back</Text>
+        {error ? (
+          <View style={styles.errorBox}>
+            <Ionicons name="alert-circle" size={20} color={COLORS.expense} />
+            <Text style={styles.errorText}>{error}</Text>
+            <TouchableOpacity onPress={() => setError("")}>
+              <Ionicons name="close" size={20} color={COLORS.textLight} />
+            </TouchableOpacity>
+
+          </View>
+        ) : null}
+        <TextInput
+          style={[styles.input, error && styles.errorInput]}
+          autoCapitalize="none"
+          value={emailAddress}
+          placeholder="Enter email"
+          placeholderTextColor={COLORS.text}
+          onChangeText={(emailAddress) => setEmailAddress(emailAddress)}
+        />
+        <TextInput
+          style={[styles.input, error && styles.errorInput]}
+          value={password}
+          placeholder="Enter password"
+          placeholderTextColor={COLORS.text}
+          secureTextEntry={true}
+          onChangeText={(password) => setPassword(password)}
+        />
+        <TouchableOpacity
+          style={styles.button}
+          onPress={onSignInPress}>
+          <Text style={styles.buttonText} >Sign In</Text>
+        </TouchableOpacity>
+        <View style={styles.footerContainer}>
+          <Text style={styles.footerText}>Don&apos;t have an account?</Text>
+          <Link href='/sign-up' asChild>
+            <TouchableOpacity >
+              <Text style={styles.linkText}>Sign Up</Text>
+
+            </TouchableOpacity>
+          </Link>
+
+        </View>
       </View>
-    </View>
+    </KeyboardAwareScrollView>
   )
 }
